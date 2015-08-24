@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"./awsecs"
+	log "github.com/Sirupsen/logrus"
 )
 
 var service = flag.String("service", "", "ECS service name at cluster")
@@ -13,24 +15,48 @@ var cluster = flag.String("cluster", "", "ECS cluster name")
 var desiredCount = flag.Int64("desiredCount", 1, "desireCount at ECS Service")
 
 func main() {
+	finished := make(chan bool)
+	go loading(finished)
+
 	flag.Parse()
+
 	result, _ := awsecs.GetOldRevision(*service, *cluster)
-	fmt.Printf("[INFO] now revision ---> %s\n", result)
+	log.Info("Now Revision is ... ", result)
+
 	newRevision, err := awsecs.RegisterTaskDefinition(*family)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Fatal(err.Error())
 	}
-	fmt.Printf("[INFO] GET newRevision ---> %s\n", newRevision)
+
+	log.Info("New Revision is ... ", newRevision)
+	log.Info("Deploy Start ....")
 
 	getRevisionError := awsecs.UpdateSerive(*service, *cluster, newRevision, *desiredCount)
 	if getRevisionError != nil {
-		fmt.Printf("[ERROR] UpdateService ERROR ---> %s\n", getRevisionError.Error())
+		log.Fatal("UpdateService Error -> ", getRevisionError.Error())
 	}
 
 	_, deployError := awsecs.PollingDeployment(*service, *cluster)
 	if deployError != nil {
-		fmt.Printf("[ERROR] Deploy Error ---> %s\n", deployError.Error())
+		log.Fatal("Deploy Error -> ", deployError.Error())
 	} else {
-		fmt.Printf("[INFO] service: %s deploy done\n", *service)
+		log.Info("Deploy SUCCESS -> ", *service)
+	}
+	finished <- true
+}
+
+func loading(finished chan bool) {
+loop:
+	for {
+		select {
+		case <-finished:
+			break loop
+		default:
+			array := []string{"|", "/", "-", "\\"}
+			for _, v := range array {
+				fmt.Printf("%s\033[1D", v)
+				time.Sleep(80 * time.Millisecond)
+			}
+		}
 	}
 }

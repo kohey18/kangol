@@ -2,10 +2,10 @@ package awsecs
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"../task"
+	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
@@ -18,6 +18,7 @@ type Deployments struct {
 }
 
 var svc = ecs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
+var deploymentMessage = ""
 
 func GetOldRevision(service, cluster string) (revision string, err error) {
 
@@ -36,7 +37,7 @@ func RegisterTaskDefinition(familyName string) (revision string, err error) {
 
 	params3, err := task.ReadConfig(familyName)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
 	}
 
 	resp3, err := svc.RegisterTaskDefinition(params3)
@@ -89,18 +90,30 @@ func PollingDeployment(service, cluster string) (string, error) {
 	// TODO: タスクが連続で変わり続ける場合はdeploy失敗
 	// (ex) service nginx has started 1 tasks: task 474be549-f9e0-4aee-bf1b-6fbac8e3b445.
 	// TODO: pollingCountを元にdeployTimeOutの実装
-	// TODO: 同じ文言のときは、クルクル or 点々で増やす
+
+	message, err := checkResouce(deployment.message)
+	if err != nil {
+		return message, err
+	}
+
+	if deploymentMessage != message {
+		log.Info(message)
+
+	}
 
 	if (deployment.primary == deployment.desire) && deployment.active == 0 {
 		return deployment.message, nil
-	} else if resourceCheck(deployment.message) {
-		return deployment.message, errors.New("resources could not be found")
 	} else {
-		fmt.Println(deployment.message)
+		deploymentMessage = message
 		return PollingDeployment(service, cluster)
 	}
 }
 
-func resourceCheck(message string) bool {
-	return strings.Contains(message, "resources could not be found")
+func checkResouce(message string) (string, error) {
+	// TODO: コンテナ配置時におけるメッセージにてエラーを検出
+	if strings.Contains(message, "resources could not be found") {
+		return message, errors.New("resources could not be found")
+	} else {
+		return message, nil
+	}
 }
