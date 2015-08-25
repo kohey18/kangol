@@ -44,7 +44,7 @@ func RegisterTaskDefinition(familyName string) (revision string, err error) {
 	return strings.Split(*resp3.TaskDefinition.TaskDefinitionARN, "/")[1], err
 }
 
-func UpdateSerive(service, cluster, revision string, desiredCount int64) error {
+func UpdateService(service, cluster, revision string, desiredCount int64) error {
 
 	params := &ecs.UpdateServiceInput{
 		Service:        aws.String(service),

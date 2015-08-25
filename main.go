@@ -20,18 +20,23 @@ func main() {
 
 	flag.Parse()
 
-	result, _ := awsecs.GetOldRevision(*service, *cluster)
-	log.Info("Now Revision is ... ", result)
-
-	newRevision, err := awsecs.RegisterTaskDefinition(*family)
-	if err != nil {
-		log.Fatal(err.Error())
+	oldRevision, _ := awsecs.GetOldRevision(*service, *cluster)
+	log.Info("Now Revision is ... ", oldRevision)
+	revision := ""
+	if *family != "" {
+		newRevision, err := awsecs.RegisterTaskDefinition(*family)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		revision = newRevision
+	} else {
+		revision = oldRevision
 	}
 
-	log.Info("New Revision is ... ", newRevision)
+	log.Info("Deploying Revision is ... ", revision)
 	log.Info("Deploy Start ....")
 
-	getRevisionError := awsecs.UpdateSerive(*service, *cluster, newRevision, *desiredCount)
+	getRevisionError := awsecs.UpdateService(*service, *cluster, revision, *desiredCount)
 	if getRevisionError != nil {
 		log.Fatal("UpdateService Error -> ", getRevisionError.Error())
 	}
@@ -43,6 +48,7 @@ func main() {
 		log.Info("Deploy SUCCESS -> ", *service)
 	}
 	finished <- true
+
 }
 
 func loading(finished chan bool) {
