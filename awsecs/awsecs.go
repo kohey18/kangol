@@ -94,19 +94,20 @@ func PollingDeployment(service, cluster string) (string, error) {
 	// (ex) service nginx has started 1 tasks: task 474be549-f9e0-4aee-bf1b-6fbac8e3b445.
 	// TODO: pollingCountを元にdeployTimeOutの実装
 
-	message, err := checkResouce(deployment.message)
-	if err != nil {
-		return message, err
-	}
-
-	if deploymentMessage != message {
-		log.Info(message)
+	if deploymentMessage == "" {
+		deploymentMessage = deployment.message
+	} else if deploymentMessage != deployment.message {
+		log.Info(deployment.message)
+		_, err := checkResouce(deployment.message)
+		if err != nil {
+			return deployment.message, err
+		}
 	}
 
 	if (deployment.primary == deployment.desire) && deployment.active == 0 {
 		return deployment.message, nil
 	} else {
-		deploymentMessage = message
+		deploymentMessage = deployment.message
 		return PollingDeployment(service, cluster)
 	}
 }
