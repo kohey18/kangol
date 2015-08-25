@@ -12,6 +12,7 @@ import (
 type TaskDefinition struct {
 	Name                 string
 	ContainerDefinitions ContainerDefinition
+	Volumes              Volume
 }
 
 type ContainerDefinition struct {
@@ -26,6 +27,7 @@ type ContainerDefinition struct {
 	Link         []string      `yaml:"link"`
 	MountPoints  []MountPoint  `yaml:"mountPoint"`
 	VolumesFrom  []VolumesFrom `yaml:"volumesFrom"`
+	Volumes      []Volume      `yaml:"volumes"`
 }
 
 type PortMapping struct {
@@ -40,14 +42,23 @@ type Environment struct {
 }
 
 type MountPoint struct {
-	ContainerPath string `yaml:containerPath`
-	ReadOnly      bool   `yaml:readOnly`
-	SourceVolume  string `yaml:souceVolume`
+	ContainerPath string `yaml:"containerPath"`
+	ReadOnly      bool   `yaml:"readOnly"`
+	SourceVolume  string `yaml:"souceVolume"`
 }
 
 type VolumesFrom struct {
-	ReadOnly        bool   `yaml:readOnly`
-	SourceContainer string `yaml:souceContainer`
+	ReadOnly        bool   `yaml:"readOnly"`
+	SourceContainer string `yaml:"souceContainer"`
+}
+
+type Volume struct {
+	Host TaskVolumeHost `yaml:"host"`
+	Name string         `yaml:"name"`
+}
+
+type TaskVolumeHost struct {
+	SourcePath string `yaml:"sourcePath"`
 }
 
 func ReadConfig(familyName string) (*ecs.RegisterTaskDefinitionInput, error) {
@@ -61,6 +72,7 @@ func ReadConfig(familyName string) (*ecs.RegisterTaskDefinitionInput, error) {
 	err := yaml.Unmarshal(data, &containers)
 
 	definitions := []*ecs.ContainerDefinition{}
+	volumes := []*ecs.Volume{}
 	for name, con := range containers {
 
 		def := &ecs.ContainerDefinition{
@@ -78,11 +90,14 @@ func ReadConfig(familyName string) (*ecs.RegisterTaskDefinitionInput, error) {
 			VolumesFrom:  getVolumesFrom(con),
 		}
 		definitions = append(definitions, def)
+
+		volumes = getVolumes(con)
 	}
 
 	params := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: definitions,
 		Family:               aws.String(familyName),
+		Volumes:              volumes,
 	}
 	return params, err
 }
@@ -159,4 +174,18 @@ func getVolumesFrom(con ContainerDefinition) []*ecs.VolumeFrom {
 		volumesFroms = append(volumesFroms, volumesFrom)
 	}
 	return volumesFroms
+}
+
+func getVolumes(con ContainerDefinition) []*ecs.Volume {
+	volumes := []*ecs.Volume{}
+	for _, v := range con.Volumes {
+		vol := &ecs.Volume{
+			Host: &ecs.HostVolumeProperties{
+				SourcePath: aws.String(v.Host.SourcePath),
+			},
+			Name: aws.String(v.Name),
+		}
+		volumes = append(volumes, vol)
+	}
+	return volumes
 }

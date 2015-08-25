@@ -41,6 +41,9 @@ func RegisterTaskDefinition(familyName string) (revision string, err error) {
 	}
 
 	resp3, err := svc.RegisterTaskDefinition(params3)
+	if err != nil {
+		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
+	}
 	return strings.Split(*resp3.TaskDefinition.TaskDefinitionARN, "/")[1], err
 }
 
@@ -98,7 +101,6 @@ func PollingDeployment(service, cluster string) (string, error) {
 
 	if deploymentMessage != message {
 		log.Info(message)
-
 	}
 
 	if (deployment.primary == deployment.desire) && deployment.active == 0 {
