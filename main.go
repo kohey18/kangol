@@ -3,14 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"kangol/awsecs"
 	"time"
 
+	"./awsecs"
 	log "github.com/Sirupsen/logrus"
 )
 
 var service = flag.String("service", "", "ECS service name at cluster")
-var family = flag.String("family", "", "ECS service family at task definition")
+var conf = flag.String("conf", "", "ECS service family at task definition")
 var cluster = flag.String("cluster", "", "ECS cluster name")
 var desiredCount = flag.Int64("desiredCount", 1, "desireCount at ECS Service")
 
@@ -23,8 +23,8 @@ func main() {
 	oldRevision, _ := awsecs.GetOldRevision(*service, *cluster)
 	log.Info("Now Revision is ... ", oldRevision)
 	revision := ""
-	if *family != "" {
-		newRevision, err := awsecs.RegisterTaskDefinition(*family)
+	if *conf != "" {
+		newRevision, err := awsecs.RegisterTaskDefinition(*conf)
 		if err != nil {
 			log.Fatal(err.Error())
 		}

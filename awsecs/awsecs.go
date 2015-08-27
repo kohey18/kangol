@@ -2,8 +2,9 @@ package awsecs
 
 import (
 	"errors"
-	"kangol/task"
 	"strings"
+
+	"../task"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,9 +37,8 @@ func GetOldRevision(service, cluster string) (revision string, err error) {
 }
 
 // RegisterTaskDefinition can get register task-definition using your yml file
-func RegisterTaskDefinition(familyName string) (revision string, err error) {
-
-	params, err := task.ReadConfig(familyName)
+func RegisterTaskDefinition(conf string) (revision string, err error) {
+	params, err := task.ReadConfig(conf)
 	if err != nil {
 		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
 	}

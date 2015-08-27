@@ -9,6 +9,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// DeploymentFile has deployment config setting
+type DeploymentFile struct {
+	Cluster string                         `yaml:"cluster"`
+	Service string                         `yaml:"service"`
+	Count   int64                          `yaml:"desiredCount"`
+	Name    string                         `yaml:"name"`
+	Task    map[string]ContainerDefinition `yaml:"task"`
+}
+
 // ContainerDefinition is struct for ECS TaskDefinition
 type ContainerDefinition struct {
 	CPU          int64         `yaml:"cpu"`
@@ -63,19 +72,19 @@ type TaskVolumeHost struct {
 }
 
 // ReadConfig can read config yml
-func ReadConfig(familyName string) (*ecs.RegisterTaskDefinitionInput, error) {
-	data, readErr := ioutil.ReadFile("./task-definitions/" + familyName + ".yml")
+func ReadConfig(conf string) (*ecs.RegisterTaskDefinitionInput, error) {
+	data, readErr := ioutil.ReadFile(conf)
 
 	if readErr != nil {
 		return nil, readErr
 	}
 
-	containers := map[string]ContainerDefinition{}
+	containers := DeploymentFile{}
 	err := yaml.Unmarshal(data, &containers)
 
 	definitions := []*ecs.ContainerDefinition{}
 	volumes := []*ecs.Volume{}
-	for name, con := range containers {
+	for name, con := range containers.Task {
 
 		def := &ecs.ContainerDefinition{
 			CPU:          aws.Int64(con.CPU),
@@ -98,7 +107,7 @@ func ReadConfig(familyName string) (*ecs.RegisterTaskDefinitionInput, error) {
 
 	params := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: definitions,
-		Family:               aws.String(familyName),
+		Family:               aws.String(containers.Name),
 		Volumes:              volumes,
 	}
 	return params, err
