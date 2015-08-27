@@ -2,14 +2,18 @@ package awsecs
 
 import (
 	"errors"
+	"kangol/task"
 	"strings"
 
-	"../task"
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
+var svc = ecs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
+var deploymentMessage = ""
+
+// Deployments has deployment infomation at ECS
 type Deployments struct {
 	active  int64
 	primary int64
@@ -17,9 +21,7 @@ type Deployments struct {
 	message string
 }
 
-var svc = ecs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
-var deploymentMessage = ""
-
+// GetOldRevision can get revision you specified
 func GetOldRevision(service, cluster string) (revision string, err error) {
 
 	params := &ecs.DescribeServicesInput{
@@ -33,20 +35,22 @@ func GetOldRevision(service, cluster string) (revision string, err error) {
 	return strings.Split(*resp.Services[0].TaskDefinition, "/")[1], err
 }
 
+// RegisterTaskDefinition can get register task-definition using your yml file
 func RegisterTaskDefinition(familyName string) (revision string, err error) {
 
-	params3, err := task.ReadConfig(familyName)
+	params, err := task.ReadConfig(familyName)
 	if err != nil {
 		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
 	}
 
-	resp3, err := svc.RegisterTaskDefinition(params3)
+	resp, err := svc.RegisterTaskDefinition(params)
 	if err != nil {
 		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
 	}
-	return strings.Split(*resp3.TaskDefinition.TaskDefinitionARN, "/")[1], err
+	return strings.Split(*resp.TaskDefinition.TaskDefinitionARN, "/")[1], err
 }
 
+// UpdateService can update service using revision you specified
 func UpdateService(service, cluster, revision string, desiredCount int64) error {
 
 	params := &ecs.UpdateServiceInput{
@@ -59,6 +63,7 @@ func UpdateService(service, cluster, revision string, desiredCount int64) error 
 	return err
 }
 
+// DescribeDeployedService can get running count
 func DescribeDeployedService(service, cluster string) (Deployments, error) {
 	param := &ecs.DescribeServicesInput{
 		Services: []*string{
@@ -83,6 +88,7 @@ func DescribeDeployedService(service, cluster string) (Deployments, error) {
 	return deployment, err
 }
 
+// PollingDeployment can check deployment message at update-service
 func PollingDeployment(service, cluster string) (string, error) {
 	deployment, err := DescribeDeployedService(service, cluster)
 
@@ -106,17 +112,17 @@ func PollingDeployment(service, cluster string) (string, error) {
 
 	if (deployment.primary == deployment.desire) && deployment.active == 0 {
 		return deployment.message, nil
-	} else {
-		deploymentMessage = deployment.message
-		return PollingDeployment(service, cluster)
 	}
+
+	deploymentMessage = deployment.message
+	return PollingDeployment(service, cluster)
+
 }
 
 func checkResouce(message string) (string, error) {
 	// TODO: コンテナ配置時におけるメッセージにてエラーを検出
 	if strings.Contains(message, "resources could not be found") {
 		return message, errors.New("resources could not be found")
-	} else {
-		return message, nil
 	}
+	return message, nil
 }

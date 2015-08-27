@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"kangol/awsecs"
 	"time"
 
-	"./awsecs"
 	log "github.com/Sirupsen/logrus"
 )
 
