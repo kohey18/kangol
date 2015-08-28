@@ -51,12 +51,12 @@ func main() {
 
 	_, deployError := awsecs.PollingDeployment(service, cluster)
 	if deployError != nil {
-		log.Fatal("Deploy Error -> ", deployError.Error())
 		rollback := awsecs.UpdateService(service, cluster, oldRevision, count)
 		if rollback != nil {
-			log.Fatal("RollBack Revision Error -> ", getRevisionError.Error())
+			log.Fatal("Deploy Error & RollBack Revision Error -> ", getRevisionError.Error())
 		} else {
 			log.Info("RollBack Revision -> ", oldRevision)
+			log.Fatal("Deploy Error -> ", deployError.Error())
 		}
 	} else {
 		log.Info("Deploy SUCCESS -> ", service)

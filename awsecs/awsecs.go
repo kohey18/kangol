@@ -3,6 +3,7 @@ package awsecs
 import (
 	"errors"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +12,7 @@ import (
 
 var svc = ecs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
 var deploymentMessage = ""
+var pollingCount = 0
 
 // Deployments has deployment infomation at ECS
 type Deployments struct {
@@ -84,6 +86,7 @@ func DescribeDeployedService(service, cluster string) (Deployments, error) {
 
 // PollingDeployment can check deployment message at update-service
 func PollingDeployment(service, cluster string) (string, error) {
+	time.Sleep(100 * time.Millisecond)
 	deployment, err := DescribeDeployedService(service, cluster)
 
 	if err != nil {
@@ -97,10 +100,15 @@ func PollingDeployment(service, cluster string) (string, error) {
 	if deploymentMessage == "" {
 		deploymentMessage = deployment.message
 	} else if deploymentMessage != deployment.message {
+		pollingCount = 0
 		log.Info(deployment.message)
 		_, err := checkResouce(deployment.message)
 		if err != nil {
 			return deployment.message, err
+		}
+	} else {
+		if pollingCount > 500 {
+			return deployment.message, errors.New(deployment.message)
 		}
 	}
 
@@ -109,6 +117,7 @@ func PollingDeployment(service, cluster string) (string, error) {
 	}
 
 	deploymentMessage = deployment.message
+	pollingCount += 1
 	return PollingDeployment(service, cluster)
 
 }
