@@ -9,8 +9,14 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// DeploymentFile has deployment config setting
-type DeploymentFile struct {
+type ClusterService struct {
+	Cluster string
+	Service string
+	Count   int64
+}
+
+// Deployment has deployment config setting
+type Deployment struct {
 	Cluster string                         `yaml:"cluster"`
 	Service string                         `yaml:"service"`
 	Count   int64                          `yaml:"desiredCount"`
@@ -72,18 +78,21 @@ type TaskVolumeHost struct {
 }
 
 // ReadConfig can read config yml
-func ReadConfig(conf string) (*ecs.RegisterTaskDefinitionInput, error) {
+func ReadConfig(conf string) (ClusterService, *ecs.RegisterTaskDefinitionInput, error) {
 	data, readErr := ioutil.ReadFile(conf)
 
 	if readErr != nil {
-		return nil, readErr
+		return ClusterService{}, nil, readErr
 	}
 
-	containers := DeploymentFile{}
+	containers := Deployment{}
 	err := yaml.Unmarshal(data, &containers)
+
+	clusterService := ClusterService{containers.Cluster, containers.Service, containers.Count}
 
 	definitions := []*ecs.ContainerDefinition{}
 	volumes := []*ecs.Volume{}
+
 	for name, con := range containers.Task {
 
 		def := &ecs.ContainerDefinition{
@@ -105,12 +114,13 @@ func ReadConfig(conf string) (*ecs.RegisterTaskDefinitionInput, error) {
 		volumes = getVolumes(con)
 	}
 
-	params := &ecs.RegisterTaskDefinitionInput{
+	taskDefinitions := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: definitions,
 		Family:               aws.String(containers.Name),
 		Volumes:              volumes,
 	}
-	return params, err
+
+	return clusterService, taskDefinitions, err
 }
 
 func getPortMapping(con ContainerDefinition) []*ecs.PortMapping {

@@ -4,8 +4,6 @@ import (
 	"errors"
 	"strings"
 
-	"../task"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -37,13 +35,9 @@ func GetOldRevision(service, cluster string) (revision string, err error) {
 }
 
 // RegisterTaskDefinition can get register task-definition using your yml file
-func RegisterTaskDefinition(conf string) (revision string, err error) {
-	params, err := task.ReadConfig(conf)
-	if err != nil {
-		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
-	}
+func RegisterTaskDefinition(taskDefinition *ecs.RegisterTaskDefinitionInput) (revision string, err error) {
 
-	resp, err := svc.RegisterTaskDefinition(params)
+	resp, err := svc.RegisterTaskDefinition(taskDefinition)
 	if err != nil {
 		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
 	}

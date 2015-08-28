@@ -6,25 +6,33 @@ import (
 	"time"
 
 	"./awsecs"
+	"./task"
 	log "github.com/Sirupsen/logrus"
 )
 
-var service = flag.String("service", "", "ECS service name at cluster")
 var conf = flag.String("conf", "", "ECS service family at task definition")
-var cluster = flag.String("cluster", "", "ECS cluster name")
-var desiredCount = flag.Int64("desiredCount", 1, "desireCount at ECS Service")
 
 func main() {
 	finished := make(chan bool)
 	go loading(finished)
 
 	flag.Parse()
+	deployment, taskDefinition, err := task.ReadConfig(*conf)
 
-	oldRevision, _ := awsecs.GetOldRevision(*service, *cluster)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	service := deployment.Service
+	cluster := deployment.Cluster
+	count := deployment.Count
+
+	oldRevision, _ := awsecs.GetOldRevision(service, cluster)
 	log.Info("Now Revision is ... ", oldRevision)
 	revision := ""
+
 	if *conf != "" {
-		newRevision, err := awsecs.RegisterTaskDefinition(*conf)
+		newRevision, err := awsecs.RegisterTaskDefinition(taskDefinition)
 		if err != nil {
 			log.Fatal(err.Error())
 		}
@@ -36,16 +44,22 @@ func main() {
 	log.Info("Deploying Revision is ... ", revision)
 	log.Info("Deploy Start ....")
 
-	getRevisionError := awsecs.UpdateService(*service, *cluster, revision, *desiredCount)
+	getRevisionError := awsecs.UpdateService(service, cluster, revision, count)
 	if getRevisionError != nil {
 		log.Fatal("UpdateService Error -> ", getRevisionError.Error())
 	}
 
-	_, deployError := awsecs.PollingDeployment(*service, *cluster)
+	_, deployError := awsecs.PollingDeployment(service, cluster)
 	if deployError != nil {
 		log.Fatal("Deploy Error -> ", deployError.Error())
+		rollback := awsecs.UpdateService(service, cluster, oldRevision, count)
+		if rollback != nil {
+			log.Fatal("RollBack Revision Error -> ", getRevisionError.Error())
+		} else {
+			log.Info("RollBack Revision -> ", oldRevision)
+		}
 	} else {
-		log.Info("Deploy SUCCESS -> ", *service)
+		log.Info("Deploy SUCCESS -> ", service)
 	}
 	finished <- true
 
