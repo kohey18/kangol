@@ -9,12 +9,22 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type TaskDefinition struct {
-	Name                 string
-	ContainerDefinitions ContainerDefinition
-	Volumes              Volume
+type ClusterService struct {
+	Cluster string
+	Service string
+	Count   int64
 }
 
+// Deployment has deployment config setting
+type Deployment struct {
+	Cluster string                         `yaml:"cluster"`
+	Service string                         `yaml:"service"`
+	Count   int64                          `yaml:"desiredCount"`
+	Name    string                         `yaml:"name"`
+	Task    map[string]ContainerDefinition `yaml:"task"`
+}
+
+// ContainerDefinition is struct for ECS TaskDefinition
 type ContainerDefinition struct {
 	CPU          int64         `yaml:"cpu"`
 	Essential    bool          `yaml:"essential"`
@@ -30,50 +40,60 @@ type ContainerDefinition struct {
 	Volumes      []Volume      `yaml:"volumes"`
 }
 
+// PortMapping is struct for ECS TaskDefinition's PortMapping
 type PortMapping struct {
 	ContainerPort int64  `yaml:"containerPort"`
 	HostPort      int64  `yaml:"hostPort"`
 	Protocol      string `yaml:"protocol"`
 }
 
+// Environment is struct for TaskDefinition's Environment
 type Environment struct {
 	Name  string `yaml:"name"`
 	Value string `yaml:"value"`
 }
 
+// MountPoint is struct for TaskDefinition's MoutPoint
 type MountPoint struct {
 	ContainerPath string `yaml:"containerPath"`
 	ReadOnly      bool   `yaml:"readOnly"`
 	SourceVolume  string `yaml:"souceVolume"`
 }
 
+// VolumesFrom is struct for TaskDefinition's VolumesFrom
 type VolumesFrom struct {
 	ReadOnly        bool   `yaml:"readOnly"`
 	SourceContainer string `yaml:"souceContainer"`
 }
 
+// Volume is struct for TaskDefinition's Volume
 type Volume struct {
 	Host TaskVolumeHost `yaml:"host"`
 	Name string         `yaml:"name"`
 }
 
+// TaskVolumeHost is struct for TaskDefinition's Volumes's volumeHost
 type TaskVolumeHost struct {
 	SourcePath string `yaml:"sourcePath"`
 }
 
-func ReadConfig(familyName string) (*ecs.RegisterTaskDefinitionInput, error) {
-	data, readErr := ioutil.ReadFile("./task-definitions/" + familyName + ".yml")
+// ReadConfig can read config yml
+func ReadConfig(conf string) (ClusterService, *ecs.RegisterTaskDefinitionInput, error) {
+	data, readErr := ioutil.ReadFile(conf)
 
 	if readErr != nil {
-		return nil, readErr
+		return ClusterService{}, nil, readErr
 	}
 
-	containers := map[string]ContainerDefinition{}
+	containers := Deployment{}
 	err := yaml.Unmarshal(data, &containers)
+
+	clusterService := ClusterService{containers.Cluster, containers.Service, containers.Count}
 
 	definitions := []*ecs.ContainerDefinition{}
 	volumes := []*ecs.Volume{}
-	for name, con := range containers {
+
+	for name, con := range containers.Task {
 
 		def := &ecs.ContainerDefinition{
 			CPU:          aws.Int64(con.CPU),
@@ -94,12 +114,13 @@ func ReadConfig(familyName string) (*ecs.RegisterTaskDefinitionInput, error) {
 		volumes = getVolumes(con)
 	}
 
-	params := &ecs.RegisterTaskDefinitionInput{
+	taskDefinitions := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: definitions,
-		Family:               aws.String(familyName),
+		Family:               aws.String(containers.Name),
 		Volumes:              volumes,
 	}
-	return params, err
+
+	return clusterService, taskDefinitions, err
 }
 
 func getPortMapping(con ContainerDefinition) []*ecs.PortMapping {
