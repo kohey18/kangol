@@ -11,6 +11,7 @@ import (
 )
 
 var conf = flag.String("conf", "", "ECS service family at task definition")
+var mode = flag.String("mode", "", "deploy mode at kangol")
 
 func main() {
 	finished := make(chan bool)
@@ -26,10 +27,22 @@ func main() {
 	service := deployment.Service
 	cluster := deployment.Cluster
 	count := deployment.Count
+	oldRevision, err := awsecs.GetOldRevision(service, cluster)
 
-	oldRevision, _ := awsecs.GetOldRevision(service, cluster)
 	log.Info("Now Revision is ... ", oldRevision)
 	revision := ""
+
+	if *mode == "debug" {
+		log.Info("Stop All Tasks at debug mode ....")
+		stopTaskError := awsecs.UpdateService(service, cluster, oldRevision, 0)
+		if stopTaskError != nil {
+			log.Fatal("Stop All Tasks Error -> ", stopTaskError.Error())
+		}
+		_, err := awsecs.PollingDeployment(service, cluster)
+		if err != nil {
+			log.Fatal("Stop All Tasks Error -> ", err.Error())
+		}
+	}
 
 	if *conf != "" {
 		newRevision, err := awsecs.RegisterTaskDefinition(taskDefinition)

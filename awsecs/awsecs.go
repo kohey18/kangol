@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
-var svc = ecs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
+var svc = ecs.New(&aws.Config{Region: aws.String("us-east-1")})
 var deploymentMessage = ""
 var pollingCount = 0
 
