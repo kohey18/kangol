@@ -96,7 +96,7 @@ func ReadConfig(conf string) (ClusterService, *ecs.RegisterTaskDefinitionInput, 
 	for name, con := range containers.Task {
 
 		def := &ecs.ContainerDefinition{
-			CPU:          aws.Int64(con.CPU),
+			Cpu:          aws.Int64(con.CPU),
 			Essential:    aws.Bool(con.Essential),
 			Image:        aws.String(con.Image),
 			Memory:       aws.Int64(con.Memory),

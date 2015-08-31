@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
-var svc = ecs.New(&aws.Config{Region: aws.String("us-east-1")})
+var svc = ecs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
 var deploymentMessage = ""
 var pollingCount = 0
 
@@ -43,7 +43,7 @@ func RegisterTaskDefinition(taskDefinition *ecs.RegisterTaskDefinitionInput) (re
 	if err != nil {
 		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
 	}
-	return strings.Split(*resp.TaskDefinition.TaskDefinitionARN, "/")[1], err
+	return strings.Split(*resp.TaskDefinition.TaskDefinitionArn, "/")[1], err
 }
 
 // UpdateService can update service using revision you specified
@@ -117,7 +117,7 @@ func PollingDeployment(service, cluster string) (string, error) {
 	}
 
 	deploymentMessage = deployment.message
-	pollingCount += 1
+	pollingCount++
 	return PollingDeployment(service, cluster)
 
 }
