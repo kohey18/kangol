@@ -2,7 +2,6 @@ package awsecs
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -28,10 +27,6 @@ func AWSECSConfig() *ecs.ECS {
 	accessKeyID := strings.Trim(os.Getenv("AWS_ACCESS_KEY_ID"), " ")
 	secretAccessKey := strings.Trim(os.Getenv("AWS_SECRET_ACCESS_KEY"), " ")
 	region := strings.Trim(os.Getenv("AWS_REGION"), " ")
-
-	fmt.Println(accessKeyID)
-	fmt.Println(secretAccessKey)
-	fmt.Println(region)
 
 	if accessKeyID == "" || secretAccessKey == "" || region == "" {
 		log.Fatal(
