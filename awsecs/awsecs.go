@@ -2,15 +2,16 @@ package awsecs
 
 import (
 	"errors"
+	"os"
 	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
-var svc = ecs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
 var deploymentMessage = ""
 var pollingCount = 0
 
@@ -20,6 +21,28 @@ type Deployments struct {
 	primary int64
 	desire  int64
 	message string
+}
+
+func AWSConfig() *ecs.ECS {
+	accessKeyID := strings.Trim(os.Getenv("AWS_ACCESS_KEY_ID"), " ")
+	secretAccessKey := strings.Trim(os.Getenv("AWS_SECRET_ACCESS_KEY"), " ")
+	region := strings.Trim(os.Getenv("AWS_REGION"), " ")
+
+	if accessKeyID == "" || secretAccessKey == "" || region == "" {
+		log.Fatal(
+			"AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY or AWS_REGION is NULL \n",
+			"[MUST] \n",
+			"export AWS_ACCESS_KEY_ID=<YOUR AWS_ACCESS_KEY_ID> \n",
+			"export AWS_SECRET_ACCESS_KEY=<YOUR AWS_SECRET_ACCESS_KEY> \n",
+			"export AWS_REGION=<ECS AWS_REGION> \n",
+		)
+	}
+
+	svc := ecs.New(&aws.Config{
+		Region:      aws.String(region),
+		Credentials: credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+	})
+	return svc
 }
 
 // GetOldRevision can get revision you specified
@@ -32,6 +55,7 @@ func GetOldRevision(service, cluster string) (revision string, err error) {
 		Cluster: aws.String(cluster),
 	}
 
+	svc := AWSConfig()
 	resp, err := svc.DescribeServices(params)
 	return strings.Split(*resp.Services[0].TaskDefinition, "/")[1], err
 }
@@ -39,6 +63,7 @@ func GetOldRevision(service, cluster string) (revision string, err error) {
 // RegisterTaskDefinition can get register task-definition using your yml file
 func RegisterTaskDefinition(taskDefinition *ecs.RegisterTaskDefinitionInput) (revision string, err error) {
 
+	svc := AWSConfig()
 	resp, err := svc.RegisterTaskDefinition(taskDefinition)
 	if err != nil {
 		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
@@ -55,6 +80,7 @@ func UpdateService(service, cluster, revision string, desiredCount int64) error 
 		DesiredCount:   aws.Int64(desiredCount),
 		TaskDefinition: aws.String(revision),
 	}
+	svc := AWSConfig()
 	_, err := svc.UpdateService(params)
 	return err
 }
@@ -67,6 +93,8 @@ func DescribeDeployedService(service, cluster string) (Deployments, error) {
 		},
 		Cluster: aws.String(cluster),
 	}
+
+	svc := AWSConfig()
 	res, err := svc.DescribeServices(param)
 	deployment := Deployments{}
 	deployment.desire = *res.Services[0].DesiredCount
