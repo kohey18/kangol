@@ -2,6 +2,7 @@ package awsecs
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -23,10 +24,14 @@ type Deployments struct {
 	message string
 }
 
-func AWSConfig() *ecs.ECS {
+func AWSECSConfig() *ecs.ECS {
 	accessKeyID := strings.Trim(os.Getenv("AWS_ACCESS_KEY_ID"), " ")
 	secretAccessKey := strings.Trim(os.Getenv("AWS_SECRET_ACCESS_KEY"), " ")
 	region := strings.Trim(os.Getenv("AWS_REGION"), " ")
+
+	fmt.Println(accessKeyID)
+	fmt.Println(secretAccessKey)
+	fmt.Println(region)
 
 	if accessKeyID == "" || secretAccessKey == "" || region == "" {
 		log.Fatal(
@@ -55,7 +60,7 @@ func GetOldRevision(service, cluster string) (revision string, err error) {
 		Cluster: aws.String(cluster),
 	}
 
-	svc := AWSConfig()
+	svc := AWSECSConfig()
 	resp, err := svc.DescribeServices(params)
 	return strings.Split(*resp.Services[0].TaskDefinition, "/")[1], err
 }
@@ -63,7 +68,7 @@ func GetOldRevision(service, cluster string) (revision string, err error) {
 // RegisterTaskDefinition can get register task-definition using your yml file
 func RegisterTaskDefinition(taskDefinition *ecs.RegisterTaskDefinitionInput) (revision string, err error) {
 
-	svc := AWSConfig()
+	svc := AWSECSConfig()
 	resp, err := svc.RegisterTaskDefinition(taskDefinition)
 	if err != nil {
 		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
@@ -80,7 +85,7 @@ func UpdateService(service, cluster, revision string, desiredCount int64) error 
 		DesiredCount:   aws.Int64(desiredCount),
 		TaskDefinition: aws.String(revision),
 	}
-	svc := AWSConfig()
+	svc := AWSECSConfig()
 	_, err := svc.UpdateService(params)
 	return err
 }
@@ -94,7 +99,7 @@ func DescribeDeployedService(service, cluster string) (Deployments, error) {
 		Cluster: aws.String(cluster),
 	}
 
-	svc := AWSConfig()
+	svc := AWSECSConfig()
 	res, err := svc.DescribeServices(param)
 	deployment := Deployments{}
 	deployment.desire = *res.Services[0].DesiredCount
