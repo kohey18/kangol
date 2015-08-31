@@ -1,24 +1,48 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"time"
+
+	"os"
 
 	"./awsecs"
 	"./task"
 	log "github.com/Sirupsen/logrus"
+	"github.com/codegangsta/cli"
 )
-
-var conf = flag.String("conf", "", "ECS service family at task definition")
-var debug = flag.Bool("debug", false, "--debug has a debug mode")
 
 func main() {
 	finished := make(chan bool)
 	go loading(finished)
 
-	flag.Parse()
-	deployment, taskDefinition, err := task.ReadConfig(*conf)
+	app := cli.NewApp()
+	app.Name = "kangol"
+	app.Usage = "ECS deployment tool"
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "conf",
+			Value: "",
+			Usage: "ECS service family at task definition",
+		},
+		cli.BoolFlag{
+			Name:  "debug",
+			Usage: "--debug has a debug mode",
+		},
+	}
+
+	app.Action = func(c *cli.Context) {
+		deploy(c.String("conf"), c.Bool("debug"))
+	}
+	app.Run(os.Args)
+
+	finished <- true
+
+}
+
+func deploy(conf string, debug bool) {
+
+	deployment, taskDefinition, err := task.ReadConfig(conf)
 
 	if err != nil {
 		log.Fatal(err.Error())
@@ -27,12 +51,16 @@ func main() {
 	service := deployment.Service
 	cluster := deployment.Cluster
 	count := deployment.Count
+
 	oldRevision, err := awsecs.GetOldRevision(service, cluster)
 
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	log.Info("Now Revision is ... ", oldRevision)
 	revision := ""
 
-	if *debug {
+	if debug {
 		log.Info("Stop All Tasks at debug mode ....")
 		stopTaskError := awsecs.UpdateService(service, cluster, oldRevision, 0)
 		if stopTaskError != nil {
@@ -44,7 +72,7 @@ func main() {
 		}
 	}
 
-	if *conf != "" {
+	if conf != "" {
 		newRevision, err := awsecs.RegisterTaskDefinition(taskDefinition)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -74,7 +102,6 @@ func main() {
 	} else {
 		log.Info("Deploy SUCCESS -> ", service)
 	}
-	finished <- true
 
 }
 
