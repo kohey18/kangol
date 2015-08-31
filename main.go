@@ -6,10 +6,10 @@ import (
 
 	"os"
 
-	"./awsecs"
-	"./task"
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/kohey18/kangol/awsecs"
+	"github.com/kohey18/kangol/task"
 )
 
 func main() {
