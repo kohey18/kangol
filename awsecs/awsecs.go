@@ -27,15 +27,15 @@ type Deployments struct {
 func AWSECSConfig() *ecs.ECS {
 	accessKeyID := strings.Trim(os.Getenv("AWS_ACCESS_KEY_ID"), " ")
 	secretAccessKey := strings.Trim(os.Getenv("AWS_SECRET_ACCESS_KEY"), " ")
-	region := strings.Trim(os.Getenv("AWS_REGION"), " ")
+	region := strings.Trim(os.Getenv("AWS_DEFAULT_REGION"), " ")
 
 	if accessKeyID == "" || secretAccessKey == "" || region == "" {
 		log.Fatal(
-			"AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY or AWS_REGION is NULL \n",
+			"AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY or AWS_DEFAULT_REGION is NULL \n",
 			"[MUST] \n",
 			"export AWS_ACCESS_KEY_ID=<YOUR AWS_ACCESS_KEY_ID> \n",
 			"export AWS_SECRET_ACCESS_KEY=<YOUR AWS_SECRET_ACCESS_KEY> \n",
-			"export AWS_REGION=<ECS AWS_REGION> \n",
+			"export AWS_DEFAULT_REGION=<ECS AWS_DEFAULT_REGION> \n",
 		)
 	}
 
