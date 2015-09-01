@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
+var svc = AWSECSConfig()
 var deploymentMessage = ""
 var pollingCount = 0
 
@@ -55,15 +56,17 @@ func GetOldRevision(service, cluster string) (revision string, err error) {
 		Cluster: aws.String(cluster),
 	}
 
-	svc := AWSECSConfig()
 	resp, err := svc.DescribeServices(params)
+	if err != nil {
+		return "", err
+	}
+
 	return strings.Split(*resp.Services[0].TaskDefinition, "/")[1], err
 }
 
 // RegisterTaskDefinition can get register task-definition using your yml file
 func RegisterTaskDefinition(taskDefinition *ecs.RegisterTaskDefinitionInput) (revision string, err error) {
 
-	svc := AWSECSConfig()
 	resp, err := svc.RegisterTaskDefinition(taskDefinition)
 	if err != nil {
 		log.Fatal("RegisterTaskDefinition Error -> ", err.Error())
@@ -80,7 +83,7 @@ func UpdateService(service, cluster, revision string, desiredCount int64) error 
 		DesiredCount:   aws.Int64(desiredCount),
 		TaskDefinition: aws.String(revision),
 	}
-	svc := AWSECSConfig()
+
 	_, err := svc.UpdateService(params)
 	return err
 }
@@ -94,7 +97,6 @@ func DescribeDeployedService(service, cluster string) (Deployments, error) {
 		Cluster: aws.String(cluster),
 	}
 
-	svc := AWSECSConfig()
 	res, err := svc.DescribeServices(param)
 	deployment := Deployments{}
 	deployment.desire = *res.Services[0].DesiredCount
