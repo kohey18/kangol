@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -9,9 +10,9 @@ import (
 	"github.com/kohey18/kangol/task"
 )
 
-func deploy(conf string, debug bool) {
+func deploy(conf, tag string, debug bool) {
 
-	deployment, taskDefinition, err := task.ReadConfig(conf)
+	deployment, taskDefinition, err := task.ReadConfig(conf, appendTags(tag))
 
 	if err != nil {
 		log.Fatal(err.Error())
@@ -72,6 +73,20 @@ func deploy(conf string, debug bool) {
 		log.Info("Deploy SUCCESS -> ", service)
 	}
 
+}
+
+func appendTags(tag string) map[string]string {
+	tags := make(map[string]string)
+	if tag == "" {
+		return tags
+	}
+
+	nameTags := strings.Split(tag, ",")
+	for _, v := range nameTags {
+		nameAndTag := strings.Split(v, ":")
+		tags[nameAndTag[0]] = nameAndTag[1]
+	}
+	return tags
 }
 
 func loading(finished chan bool) {
