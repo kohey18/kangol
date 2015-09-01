@@ -2,6 +2,7 @@ package task
 
 import (
 	"io/ioutil"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -78,7 +79,7 @@ type TaskVolumeHost struct {
 }
 
 // ReadConfig can read config yml
-func ReadConfig(conf string) (ClusterService, *ecs.RegisterTaskDefinitionInput, error) {
+func ReadConfig(conf string, tags map[string]string) (ClusterService, *ecs.RegisterTaskDefinitionInput, error) {
 	data, readErr := ioutil.ReadFile(conf)
 
 	if readErr != nil {
@@ -94,6 +95,9 @@ func ReadConfig(conf string) (ClusterService, *ecs.RegisterTaskDefinitionInput, 
 	volumes := []*ecs.Volume{}
 
 	for name, con := range containers.Task {
+		if tags[name] != "" {
+			con.Image = addImageTag(con.Image, tags[name])
+		}
 
 		def := &ecs.ContainerDefinition{
 			Cpu:          aws.Int64(con.CPU),
@@ -121,6 +125,12 @@ func ReadConfig(conf string) (ClusterService, *ecs.RegisterTaskDefinitionInput, 
 	}
 
 	return clusterService, taskDefinitions, err
+}
+
+func addImageTag(image, tag string) string {
+	imagesArray := strings.Split(image, ":")
+	imagesArray[len(imagesArray)-1] = tag
+	return strings.Join(imagesArray, ":")
 }
 
 func getPortMapping(con ContainerDefinition) []*ecs.PortMapping {
