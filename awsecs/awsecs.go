@@ -136,10 +136,6 @@ func PollingDeployment(service, cluster string) (string, error) {
 		if err != nil {
 			return deployment.message, err
 		}
-	} else {
-		if pollingCount > 500 {
-			return deployment.message, errors.New(deployment.message)
-		}
 	}
 
 	if (deployment.primary == deployment.desire) && deployment.active == 0 {
