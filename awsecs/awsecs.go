@@ -98,6 +98,11 @@ func DescribeDeployedService(service, cluster string) (Deployments, error) {
 	}
 
 	res, err := svc.DescribeServices(param)
+
+	if err != nil {
+		return nil, err
+	}
+
 	deployment := Deployments{}
 	deployment.desire = *res.Services[0].DesiredCount
 
