@@ -9,6 +9,7 @@ import (
 func main() {
 	finished := make(chan bool)
 	go loading(finished)
+
 	app := cli.NewApp()
 	app.Name = "kangol"
 	app.Usage = "ECS deployment tool"
@@ -34,10 +35,12 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) {
+
+		if c.Bool("loading") == false {
+			finished <- true
+		}
 		deploy(c.String("conf"), c.String("tag"), c.Bool("debug"))
 	}
 	app.Run(os.Args)
-
-	finished <- true
 
 }
