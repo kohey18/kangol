@@ -9,7 +9,6 @@ import (
 func main() {
 	finished := make(chan bool)
 	go loading(finished)
-
 	app := cli.NewApp()
 	app.Name = "kangol"
 	app.Usage = "ECS deployment tool"
@@ -27,6 +26,10 @@ func main() {
 		cli.BoolFlag{
 			Name:  "debug",
 			Usage: "--debug has a debug mode",
+		},
+		cli.BoolFlag{
+			Name:  "loading",
+			Usage: "--loading has a loading while deploying",
 		},
 	}
 
