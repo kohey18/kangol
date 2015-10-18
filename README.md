@@ -4,6 +4,9 @@ Container Deploy and Manage System at Amazon EC2 Container Service(ECS).
 You can use YAML files to manage docker container(task-definition at ECS).
 And when kangol catches the errors at ECS deploy, it can revert before revision automatically.
 
+
+![](https://cloud.githubusercontent.com/assets/2541396/10562719/ee2773fc-75a4-11e5-8b46-9273ff110db2.gif)
+
 ## Installation
 
 ```
