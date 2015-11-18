@@ -127,7 +127,6 @@ func DescribeDeployedService(service, cluster string) (Deployments, error) {
 func PollingDeployment(service, cluster string) (string, error) {
 	time.Sleep(100 * time.Millisecond)
 	deployment, err := DescribeDeployedService(service, cluster)
-
 	if err != nil {
 		return deployment.message, err
 	}
@@ -161,6 +160,8 @@ func checkResouce(message string) (string, error) {
 	// TODO: コンテナ配置時におけるメッセージにてエラーを検出
 	if strings.Contains(message, "resources could not be found") {
 		return message, errors.New("resources could not be found")
+	} else if strings.Contains(message, "was unable to place a task") {
+		return message, errors.New(message)
 	}
 	return message, nil
 }
