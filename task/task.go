@@ -35,7 +35,7 @@ type ContainerDefinition struct {
 	Command      []string      `yaml:"command"`
 	EntryPoint   []string      `yaml:"entrypoint"`
 	Environment  []Environment `yaml:"environment"`
-	Link         []string      `yaml:"link"`
+	Link         []string      `yaml:"links"`
 	MountPoints  []MountPoint  `yaml:"mountPoint"`
 	VolumesFrom  []VolumesFrom `yaml:"volumesFrom"`
 	Volumes      []Volume      `yaml:"volumes"`
