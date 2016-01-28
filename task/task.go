@@ -27,18 +27,19 @@ type Deployment struct {
 
 // ContainerDefinition is struct for ECS TaskDefinition
 type ContainerDefinition struct {
-	CPU          int64         `yaml:"cpu"`
-	Essential    bool          `yaml:"essential"`
-	Image        string        `yaml:"image"`
-	Memory       int64         `yaml:"memory"`
-	PortMappings []PortMapping `yaml:"portMappings"`
-	Command      []string      `yaml:"command"`
-	EntryPoint   []string      `yaml:"entrypoint"`
-	Environment  []Environment `yaml:"environment"`
-	Link         []string      `yaml:"links"`
-	MountPoints  []MountPoint  `yaml:"mountPoint"`
-	VolumesFrom  []VolumesFrom `yaml:"volumesFrom"`
-	Volumes      []Volume      `yaml:"volumes"`
+	CPU              int64            `yaml:"cpu"`
+	Essential        bool             `yaml:"essential"`
+	Image            string           `yaml:"image"`
+	Memory           int64            `yaml:"memory"`
+	PortMappings     []PortMapping    `yaml:"portMappings"`
+	Command          []string         `yaml:"command"`
+	EntryPoint       []string         `yaml:"entrypoint"`
+	Environment      []Environment    `yaml:"environment"`
+	Link             []string         `yaml:"links"`
+	MountPoints      []MountPoint     `yaml:"mountPoint"`
+	VolumesFrom      []VolumesFrom    `yaml:"volumesFrom"`
+	Volumes          []Volume         `yaml:"volumes"`
+	LogConfiguration LogConfiguration `yaml:"logConfiguration"`
 }
 
 // PortMapping is struct for ECS TaskDefinition's PortMapping
@@ -78,6 +79,18 @@ type TaskVolumeHost struct {
 	SourcePath string `yaml:"sourcePath"`
 }
 
+// LogConfiguration is struct for TaskDefinition's LogConfiguration
+type LogConfiguration struct {
+	LogDriver string                  `yaml:"logDriver"`
+	Options   LogConfigurationOptions `yaml:"options"`
+}
+
+// LogConfigurationOptions is struct for LogConfiguration's LogConfigurationOptions
+type LogConfigurationOptions struct {
+	FluentdAddress string `yaml:"fluentdAddress"`
+	Tag            string `yaml:"tag"`
+}
+
 // ReadConfig can read config yml
 func ReadConfig(conf string, tags map[string]string) (ClusterService, *ecs.RegisterTaskDefinitionInput, error) {
 	data, readErr := ioutil.ReadFile(conf)
@@ -100,18 +113,19 @@ func ReadConfig(conf string, tags map[string]string) (ClusterService, *ecs.Regis
 		}
 
 		def := &ecs.ContainerDefinition{
-			Cpu:          aws.Int64(con.CPU),
-			Essential:    aws.Bool(con.Essential),
-			Image:        aws.String(con.Image),
-			Memory:       aws.Int64(con.Memory),
-			Name:         aws.String(name),
-			PortMappings: getPortMapping(con),
-			Command:      getCommands(con),
-			EntryPoint:   getEntryPoints(con),
-			Environment:  getEnvironments(con),
-			Links:        getLinks(con),
-			MountPoints:  getMountPoints(con),
-			VolumesFrom:  getVolumesFrom(con),
+			Cpu:              aws.Int64(con.CPU),
+			Essential:        aws.Bool(con.Essential),
+			Image:            aws.String(con.Image),
+			Memory:           aws.Int64(con.Memory),
+			Name:             aws.String(name),
+			PortMappings:     getPortMapping(con),
+			Command:          getCommands(con),
+			EntryPoint:       getEntryPoints(con),
+			Environment:      getEnvironments(con),
+			Links:            getLinks(con),
+			MountPoints:      getMountPoints(con),
+			VolumesFrom:      getVolumesFrom(con),
+			LogConfiguration: getLogConfiguration(con),
 		}
 		definitions = append(definitions, def)
 
@@ -219,4 +233,16 @@ func getVolumes(con ContainerDefinition) []*ecs.Volume {
 		volumes = append(volumes, vol)
 	}
 	return volumes
+}
+
+func getLogConfiguration(con ContainerDefinition) *ecs.LogConfiguration {
+	logConf := con.LogConfiguration
+	conf := &ecs.LogConfiguration{
+		LogDriver: aws.String(con.LogConfiguration.LogDriver),
+		Options: map[string]*string{
+			"fluentd-address": aws.String(logConf.Options.FluentdAddress),
+			"tag":             aws.String(logConf.Options.Tag),
+		},
+	}
+	return conf
 }
