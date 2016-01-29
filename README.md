@@ -106,6 +106,11 @@ task:
     environment:
         - name: "JAVA_OPTS"
           value: "-Dconfig.resource=api.conf
+    logConfiguration:
+        logDriver: fluentd
+        options:
+            fluentdAddress: "your logger host"
+            tag: "docker.{{.Name}}"
 ```
 
 * example
@@ -128,6 +133,11 @@ task:
     environment:
         - name: "JAVA_OPTS"
           value: "-Dconfig.resource=api.conf
+    logConfiguration:
+        logDriver: fluentd
+        options:
+            fluentdAddress: fluentd.example.com
+            tag: "docker.{{.Name}}"
   nginx:
     image: "kohey18/nginx:latest"
     cpu: 512
