@@ -113,19 +113,22 @@ func ReadConfig(conf string, tags map[string]string) (ClusterService, *ecs.Regis
 		}
 
 		def := &ecs.ContainerDefinition{
-			Cpu:              aws.Int64(con.CPU),
-			Essential:        aws.Bool(con.Essential),
-			Image:            aws.String(con.Image),
-			Memory:           aws.Int64(con.Memory),
-			Name:             aws.String(name),
-			PortMappings:     getPortMapping(con),
-			Command:          getCommands(con),
-			EntryPoint:       getEntryPoints(con),
-			Environment:      getEnvironments(con),
-			Links:            getLinks(con),
-			MountPoints:      getMountPoints(con),
-			VolumesFrom:      getVolumesFrom(con),
-			LogConfiguration: getLogConfiguration(con),
+			Cpu:          aws.Int64(con.CPU),
+			Essential:    aws.Bool(con.Essential),
+			Image:        aws.String(con.Image),
+			Memory:       aws.Int64(con.Memory),
+			Name:         aws.String(name),
+			PortMappings: getPortMapping(con),
+			Command:      getCommands(con),
+			EntryPoint:   getEntryPoints(con),
+			Environment:  getEnvironments(con),
+			Links:        getLinks(con),
+			MountPoints:  getMountPoints(con),
+			VolumesFrom:  getVolumesFrom(con),
+		}
+
+		if con.LogConfiguration.LogDriver != "" {
+			def.LogConfiguration = getLogConfiguration(con)
 		}
 		definitions = append(definitions, def)
 
