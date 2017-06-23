@@ -122,7 +122,7 @@ desiredCount: 1
 name: "api"
 task:
   api:
-    image: "kohey18/api:latest"
+    image: "recruit-mp/api:latest"
     cpu: 512
     memory: 1800
     portMappings:
@@ -139,7 +139,7 @@ task:
             fluentdAddress: fluentd.example.com
             tag: "docker.{{.Name}}"
   nginx:
-    image: "kohey18/nginx:latest"
+    image: "recruit-mp/nginx:latest"
     cpu: 512
     memory: 1800
     portMappings:

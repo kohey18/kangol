@@ -236,7 +236,7 @@ func getLogConfiguration(con ContainerDefinition) *ecs.LogConfiguration {
 	logConf := con.LogConfiguration
 	conf := &ecs.LogConfiguration{
 		LogDriver: aws.String(con.LogConfiguration.LogDriver),
-		Options: logConf.Options,
+		Options:   logConf.Options,
 	}
 	return conf
 }
