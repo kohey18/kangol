@@ -10,7 +10,7 @@ And when kangol catches the errors at ECS deploy, it can revert before revision 
 ## Installation
 
 ```
-go get -u github.com/kohey18/kangol
+go get -u github.com/recruit-mp/kangol
 ```
 
 ## Usage
