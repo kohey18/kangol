@@ -13,6 +13,9 @@ task:
       hostPort: 0
       protocol: tcp
     essential: true
+    volumesFrom:
+    - sourceContainer: test
+      readOnly: false
     environment:
     - name: ENV1
       value: VALUE1

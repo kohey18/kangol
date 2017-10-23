@@ -65,7 +65,7 @@ type MountPoint struct {
 // VolumesFrom is struct for TaskDefinition's VolumesFrom
 type VolumesFrom struct {
 	ReadOnly        bool   `yaml:"readOnly"`
-	SourceContainer string `yaml:"souceContainer"`
+	SourceContainer string `yaml:"sourceContainer"`
 }
 
 // Volume is struct for TaskDefinition's Volume

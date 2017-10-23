@@ -68,7 +68,12 @@ func TestReadConfig(t *testing.T) {
 				Environment: envs,
 				Links:       []*string{},
 				MountPoints: []*ecs.MountPoint{},
-				VolumesFrom: []*ecs.VolumeFrom{},
+				VolumesFrom: []*ecs.VolumeFrom{
+					&ecs.VolumeFrom{
+						SourceContainer: aws.String("test"),
+						ReadOnly:        aws.Bool(false),
+					},
+				},
 				LogConfiguration: &ecs.LogConfiguration{
 					LogDriver: aws.String(ecs.LogDriverAwslogs),
 					Options: map[string]*string{
