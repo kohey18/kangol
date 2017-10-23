@@ -65,7 +65,7 @@ type MountPoint struct {
 // VolumesFrom is struct for TaskDefinition's VolumesFrom
 type VolumesFrom struct {
 	ReadOnly        bool   `yaml:"readOnly"`
-	SourceContainer string `yaml:"souceContainer"`
+	SourceContainer string `yaml:"sourceContainer"`
 }
 
 // Volume is struct for TaskDefinition's Volume
@@ -81,14 +81,8 @@ type TaskVolumeHost struct {
 
 // LogConfiguration is struct for TaskDefinition's LogConfiguration
 type LogConfiguration struct {
-	LogDriver string                  `yaml:"logDriver"`
-	Options   LogConfigurationOptions `yaml:"options"`
-}
-
-// LogConfigurationOptions is struct for LogConfiguration's LogConfigurationOptions
-type LogConfigurationOptions struct {
-	FluentdAddress string `yaml:"fluentdAddress"`
-	Tag            string `yaml:"tag"`
+	LogDriver string             `yaml:"logDriver"`
+	Options   map[string]*string `yaml:"options"`
 }
 
 // ReadConfig can read config yml
@@ -242,10 +236,7 @@ func getLogConfiguration(con ContainerDefinition) *ecs.LogConfiguration {
 	logConf := con.LogConfiguration
 	conf := &ecs.LogConfiguration{
 		LogDriver: aws.String(con.LogConfiguration.LogDriver),
-		Options: map[string]*string{
-			"fluentd-address": aws.String(logConf.Options.FluentdAddress),
-			"tag":             aws.String(logConf.Options.Tag),
-		},
+		Options:   logConf.Options,
 	}
 	return conf
 }

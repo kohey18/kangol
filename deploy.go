@@ -6,8 +6,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/kohey18/kangol/awsecs"
-	"github.com/kohey18/kangol/task"
+	"github.com/recruit-mp/kangol/awsecs"
+	"github.com/recruit-mp/kangol/task"
 )
 
 func deploy(conf, tag string, debug bool) {
