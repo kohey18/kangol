@@ -31,7 +31,7 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name: "skip-polling",
-			Usage: "--skip-polling skip polling"
+			Usage: "--skip-polling skip polling",
 		}
 		cli.BoolFlag{
 			Name:  "loading",
