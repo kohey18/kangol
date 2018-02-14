@@ -10,7 +10,7 @@ import (
 	"github.com/recruit-mp/kangol/task"
 )
 
-func deploy(conf, tag string, debug bool) {
+func deploy(conf, tag string, debug bool, skipPolling bool) {
 
 	deployment, taskDefinition, err := task.ReadConfig(conf, appendTags(tag))
 
@@ -60,17 +60,21 @@ func deploy(conf, tag string, debug bool) {
 		log.Fatal("UpdateService Error -> ", getRevisionError.Error())
 	}
 
-	_, deployError := awsecs.PollingDeployment(service, cluster)
-	if deployError != nil {
-		rollback := awsecs.UpdateService(service, cluster, oldRevision, count)
-		if rollback != nil {
-			log.Fatal("Deploy Error & RollBack Revision Error -> ", getRevisionError.Error())
-		} else {
-			log.Info("RollBack Revision -> ", oldRevision)
-			log.Fatal("Deploy Error -> ", deployError.Error())
-		}
+	if skipPolling {
+		log.Info("Skip Polling Deploy SUCCESS -> ", service)
 	} else {
-		log.Info("Deploy SUCCESS -> ", service)
+		_, deployError := awsecs.PollingDeployment(service, cluster)
+		if deployError != nil {
+			rollback := awsecs.UpdateService(service, cluster, oldRevision, count)
+			if rollback != nil {
+				log.Fatal("Deploy Error & RollBack Revision Error -> ", getRevisionError.Error())
+			} else {
+				log.Info("RollBack Revision -> ", oldRevision)
+				log.Fatal("Deploy Error -> ", deployError.Error())
+			}
+		} else {
+			log.Info("Deploy SUCCESS -> ", service)
+		}
 	}
 
 }

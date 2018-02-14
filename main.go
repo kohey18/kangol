@@ -30,6 +30,10 @@ func main() {
 			Usage: "--debug has a debug mode",
 		},
 		cli.BoolFlag{
+			Name: "skip-polling",
+			Usage: "--skip-polling skip polling"
+		}
+		cli.BoolFlag{
 			Name:  "loading",
 			Usage: "--loading has a loading while deploying",
 		},
@@ -40,7 +44,7 @@ func main() {
 		if c.Bool("loading") == false {
 			finished <- true
 		}
-		deploy(c.String("conf"), c.String("tag"), c.Bool("debug"))
+		deploy(c.String("conf"), c.String("tag"), c.Bool("debug"), c.Bool("skip-polling"))
 	}
 	app.Run(os.Args)
 
