@@ -30,9 +30,9 @@ func main() {
 			Usage: "--debug has a debug mode",
 		},
 		cli.BoolFlag{
-			Name: "skip-polling",
+			Name:  "skip-polling",
 			Usage: "--skip-polling skip polling",
-		}
+		},
 		cli.BoolFlag{
 			Name:  "loading",
 			Usage: "--loading has a loading while deploying",
