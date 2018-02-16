@@ -74,7 +74,7 @@ kangol --conf ./nginx.yml --tag nginx:latest --debug
 if you think kangol loading disturbed your deployment environment, you should add loading option.
 When you off lading option, kangol will not show loading while deploying.
 
-(ex) loading onn
+(ex) loading on
 
 ```
 kangol --conf ./nginx.yml --tag nginx:latest --debug --loading
