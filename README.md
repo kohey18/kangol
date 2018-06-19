@@ -59,9 +59,9 @@ kangol --conf ./api.yml --tag api:b34cda71
 
 ### debug mode
 
-You want to stop all container at a service before you want to deployed because ECS show 'resouce not found' because of few your resouces in your cluster.
+You want to stop all container at a service before you want to deployed because ECS show 'resource not found' because of few your resources in your cluster.
 
-I'll recommend to apply your development enviroment at ECS.
+I'll recommend to apply your development environment at ECS.
 
 (ex)
 
@@ -71,7 +71,7 @@ kangol --conf ./nginx.yml --tag nginx:latest --debug
 
 ### loading mode
 
-if you think kangol loading disturbed your deployment enviroment, you should add loading option.
+if you think kangol loading disturbed your deployment environment, you should add loading option.
 When you off lading option, kangol will not show loading while deploying.
 
 (ex) loading on
@@ -91,7 +91,7 @@ kangol --conf ./nginx.yml --tag nginx:latest --debug
 ```
 cluster: "CLUSTER NAME"
 service: "SERVICE NAMAE"
-desiredCount: "desirecCount at Cluster"
+desiredCount: "desiredCount at Cluster"
 name: "task-definition-Name"
 task:
   "container-name":
