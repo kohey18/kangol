@@ -46,6 +46,34 @@ func main() {
 		}
 		deploy(c.String("conf"), c.String("tag"), c.Bool("debug"), c.Bool("skip-polling"))
 	}
+
+	app.Commands = []cli.Command{
+		{
+			Name:  "run",
+			Usage: "run an ECS task",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "conf",
+					Value: "",
+					Usage: "ECS service family at task definition",
+				},
+				cli.StringFlag{
+					Name:  "tag",
+					Value: "",
+					Usage: "--tag has a container tag",
+				},
+				cli.StringFlag{
+					Name:  "command",
+					Value: "",
+					Usage: "--command has a run task override command",
+				},
+			},
+			Action: func(c *cli.Context) {
+				runTask(c.String("conf"), c.String("tag"), c.String("command"))
+			},
+		},
+	}
+
 	app.Run(os.Args)
 
 }

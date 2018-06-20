@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
 
-var svc = AWSECSConfig()
+var svc = awsECSConfig()
 var deploymentMessage = ""
 var pollingCount = 0
 
@@ -25,7 +25,7 @@ type Deployments struct {
 	message string
 }
 
-func AWSECSConfig() *ecs.ECS {
+func awsECSConfig() *ecs.ECS {
 	accessKeyID := strings.Trim(os.Getenv("AWS_ACCESS_KEY_ID"), " ")
 	secretAccessKey := strings.Trim(os.Getenv("AWS_SECRET_ACCESS_KEY"), " ")
 	region := strings.Trim(os.Getenv("AWS_DEFAULT_REGION"), " ")
@@ -154,6 +154,56 @@ func PollingDeployment(service, cluster string) (string, error) {
 	pollingCount++
 	return PollingDeployment(service, cluster)
 
+}
+
+// RunOneShotTask can run an ECS task
+func RunOneShotTask(cluster string, taskDefinition string, command []*string) (string, error) {
+	containerName := strings.Split(taskDefinition, ":")[0]
+	param := &ecs.RunTaskInput{
+		Cluster:        aws.String(cluster),
+		Count:          aws.Int64(1),
+		TaskDefinition: aws.String(taskDefinition),
+		LaunchType:     aws.String(ecs.LaunchTypeEc2),
+		Overrides: &ecs.TaskOverride{
+			ContainerOverrides: []*ecs.ContainerOverride{
+				&ecs.ContainerOverride{
+					Name:    aws.String(containerName),
+					Command: command,
+				},
+			},
+		},
+	}
+
+	res, err := svc.RunTask(param)
+	if err != nil {
+		return "", err
+	}
+	if len(res.Tasks) == 0 {
+		return "", errors.New("Failure RunTask result count is zero")
+	}
+	taskArn := res.Tasks[0].TaskArn
+	tasksInput := &ecs.DescribeTasksInput{
+		Cluster: aws.String(cluster),
+		Tasks: []*string{
+			taskArn,
+		},
+	}
+	log.Info("Task Created -> ", *taskArn)
+	waitTaskStoppedError := svc.WaitUntilTasksStopped(tasksInput)
+	if waitTaskStoppedError != nil {
+		return "", waitTaskStoppedError
+	}
+	log.Info("Task RUNNING and STOPPED -> ", *taskArn)
+
+	result, runTaskError := svc.DescribeTasks(tasksInput)
+	if runTaskError != nil {
+		return "", runTaskError
+	}
+	if *result.Tasks[0].Containers[0].ExitCode != 0 {
+		return "", errors.New("Task Exited Abnormally")
+	}
+
+	return *taskArn, err
 }
 
 func checkResouce(message string) (string, error) {
