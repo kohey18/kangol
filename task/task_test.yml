@@ -21,6 +21,10 @@ task:
       value: VALUE1
     - name: ENV2
       value: VALUE2
+    dockerLabels:
+      key1: value1
+      key2: value2
+      "my.dotkey": "my.dotvalue"
     logConfiguration:
       logDriver: awslogs
       options:
