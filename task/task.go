@@ -27,19 +27,20 @@ type Deployment struct {
 
 // ContainerDefinition is struct for ECS TaskDefinition
 type ContainerDefinition struct {
-	CPU              int64            `yaml:"cpu"`
-	Essential        bool             `yaml:"essential"`
-	Image            string           `yaml:"image"`
-	Memory           int64            `yaml:"memory"`
-	PortMappings     []PortMapping    `yaml:"portMappings"`
-	Command          []string         `yaml:"command"`
-	EntryPoint       []string         `yaml:"entrypoint"`
-	Environment      []Environment    `yaml:"environment"`
-	Link             []string         `yaml:"links"`
-	MountPoints      []MountPoint     `yaml:"mountPoint"`
-	VolumesFrom      []VolumesFrom    `yaml:"volumesFrom"`
-	Volumes          []Volume         `yaml:"volumes"`
-	LogConfiguration LogConfiguration `yaml:"logConfiguration"`
+	CPU              int64              `yaml:"cpu"`
+	Essential        bool               `yaml:"essential"`
+	Image            string             `yaml:"image"`
+	Memory           int64              `yaml:"memory"`
+	PortMappings     []PortMapping      `yaml:"portMappings"`
+	Command          []string           `yaml:"command"`
+	EntryPoint       []string           `yaml:"entrypoint"`
+	Environment      []Environment      `yaml:"environment"`
+	Link             []string           `yaml:"links"`
+	MountPoints      []MountPoint       `yaml:"mountPoint"`
+	VolumesFrom      []VolumesFrom      `yaml:"volumesFrom"`
+	Volumes          []Volume           `yaml:"volumes"`
+	LogConfiguration LogConfiguration   `yaml:"logConfiguration"`
+	DockerLabels     map[string]*string `yaml:"dockerLabels"`
 }
 
 // PortMapping is struct for ECS TaskDefinition's PortMapping
@@ -119,6 +120,7 @@ func ReadConfig(conf string, tags map[string]string) (ClusterService, *ecs.Regis
 			Links:        getLinks(con),
 			MountPoints:  getMountPoints(con),
 			VolumesFrom:  getVolumesFrom(con),
+			DockerLabels: con.DockerLabels,
 		}
 
 		if con.LogConfiguration.LogDriver != "" {

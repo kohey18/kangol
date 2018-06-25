@@ -74,6 +74,11 @@ func TestReadConfig(t *testing.T) {
 						ReadOnly:        aws.Bool(false),
 					},
 				},
+				DockerLabels: map[string]*string{
+					"key1":      aws.String("value1"),
+					"key2":      aws.String("value2"),
+					"my.dotkey": aws.String("my.dotvalue"),
+				},
 				LogConfiguration: &ecs.LogConfiguration{
 					LogDriver: aws.String(ecs.LogDriverAwslogs),
 					Options: map[string]*string{
