@@ -67,9 +67,19 @@ func main() {
 					Value: "",
 					Usage: "--command has a run task override command",
 				},
+				cli.Int64Flag{
+					Name:  "cpu",
+					Value: 256,
+					Usage: "--cpu has a run task override cpu reserved",
+				},
+				cli.Int64Flag{
+					Name:  "memory",
+					Value: 256,
+					Usage: "--memory has a run task override memory reserved",
+				},
 			},
 			Action: func(c *cli.Context) {
-				runTask(c.String("conf"), c.String("tag"), c.String("command"))
+				runTask(c.String("conf"), c.String("tag"), c.String("command"), c.Int64("cpu"), c.Int64("memory"))
 			},
 		},
 	}

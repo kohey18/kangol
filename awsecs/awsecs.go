@@ -157,7 +157,7 @@ func PollingDeployment(service, cluster string) (string, error) {
 }
 
 // RunOneShotTask can run an ECS task
-func RunOneShotTask(cluster string, taskDefinition string, command []*string) (string, error) {
+func RunOneShotTask(cluster string, taskDefinition string, command []*string, cpu int64, memory int64) (string, error) {
 	containerName := strings.Split(taskDefinition, ":")[0]
 	param := &ecs.RunTaskInput{
 		Cluster:        aws.String(cluster),
@@ -167,17 +167,21 @@ func RunOneShotTask(cluster string, taskDefinition string, command []*string) (s
 		Overrides: &ecs.TaskOverride{
 			ContainerOverrides: []*ecs.ContainerOverride{
 				&ecs.ContainerOverride{
-					Name:    aws.String(containerName),
-					Command: command,
+					Name:              aws.String(containerName),
+					Command:           command,
+					Cpu:               aws.Int64(cpu),
+					MemoryReservation: aws.Int64(memory),
 				},
 			},
 		},
 	}
 
+	log.Info("RunTask with parameter -> ", *param)
 	res, err := svc.RunTask(param)
 	if err != nil {
 		return "", err
 	}
+	log.Info("RunTask result -> ", *res)
 	if len(res.Tasks) == 0 {
 		return "", errors.New("Failure RunTask result count is zero")
 	}
@@ -199,8 +203,9 @@ func RunOneShotTask(cluster string, taskDefinition string, command []*string) (s
 	if runTaskError != nil {
 		return "", runTaskError
 	}
+	log.Info("Describe Task result -> ", *result)
 	if *result.Tasks[0].Containers[0].ExitCode != 0 {
-		return "", errors.New("Task Exited Abnormally")
+		return *taskArn, errors.New("Task Exited Abnormally")
 	}
 
 	return *taskArn, err
