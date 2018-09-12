@@ -18,11 +18,12 @@ type ClusterService struct {
 
 // Deployment has deployment config setting
 type Deployment struct {
-	Cluster string                         `yaml:"cluster"`
-	Service string                         `yaml:"service"`
-	Count   int64                          `yaml:"desiredCount"`
-	Name    string                         `yaml:"name"`
-	Task    map[string]ContainerDefinition `yaml:"task"`
+	Cluster     string                         `yaml:"cluster"`
+	Service     string                         `yaml:"service"`
+	Count       int64                          `yaml:"desiredCount"`
+	Name        string                         `yaml:"name"`
+	NetworkMode string                         `yaml:"networkMode"`
+	Task        map[string]ContainerDefinition `yaml:"task"`
 }
 
 // ContainerDefinition is struct for ECS TaskDefinition
@@ -135,6 +136,10 @@ func ReadConfig(conf string, tags map[string]string) (ClusterService, *ecs.Regis
 		ContainerDefinitions: definitions,
 		Family:               aws.String(containers.Name),
 		Volumes:              volumes,
+	}
+
+	if containers.NetworkMode != "" {
+		taskDefinitions.NetworkMode = aws.String(containers.NetworkMode)
 	}
 
 	return clusterService, taskDefinitions, err

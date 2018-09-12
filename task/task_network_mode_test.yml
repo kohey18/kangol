@@ -1,0 +1,33 @@
+---
+cluster: cluster-name
+service: service-name
+desiredCount: 5
+name: task-name
+networkMode: awsvpc
+task:
+  service-name:
+    image: registry.example.com/image:tag
+    cpu: 256
+    memory: 512
+    portMappings:
+    - containerPort: 9000
+      hostPort: 0
+      protocol: tcp
+    essential: true
+    volumesFrom:
+    - sourceContainer: test
+      readOnly: false
+    environment:
+    - name: ENV1
+      value: VALUE1
+    - name: ENV2
+      value: VALUE2
+    dockerLabels:
+      key1: value1
+      key2: value2
+      "my.dotkey": "my.dotvalue"
+    logConfiguration:
+      logDriver: awslogs
+      options:
+        awslogs-region: ap-northeast-1
+        awslogs-group: log-group
