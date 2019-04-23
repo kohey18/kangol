@@ -124,8 +124,7 @@ func DescribeDeployedService(service, cluster string) (Deployments, error) {
 }
 
 // PollingDeployment can check deployment message at update-service
-func PollingDeployment(service, cluster string) (string, error) {
-	time.Sleep(1 * time.Second)
+func PollingDeployment(service, cluster string, pollingTime int64) (string, error) {
 	deployment, err := DescribeDeployedService(service, cluster)
 	if err != nil {
 		return deployment.message, err
@@ -152,7 +151,9 @@ func PollingDeployment(service, cluster string) (string, error) {
 
 	deploymentMessage = deployment.message
 	pollingCount++
-	return PollingDeployment(service, cluster)
+	log.Info("Wait for polling -> ", time.Now())
+	time.Sleep(time.Duration(pollingTime) * time.Second)
+	return PollingDeployment(service, cluster, pollingTime)
 
 }
 

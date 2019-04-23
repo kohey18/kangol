@@ -37,6 +37,11 @@ func main() {
 			Name:  "loading",
 			Usage: "--loading has a loading while deploying",
 		},
+		cli.Int64Flag{
+			Name:  "polling-time",
+			Value: 1,
+			Usage: "--polling-time 10",
+		},
 	}
 
 	app.Action = func(c *cli.Context) {
@@ -44,7 +49,12 @@ func main() {
 		if c.Bool("loading") == false {
 			finished <- true
 		}
-		deploy(c.String("conf"), c.String("tag"), c.Bool("debug"), c.Bool("skip-polling"))
+		deploy(
+			c.String("conf"),
+			c.String("tag"),
+			c.Bool("debug"),
+			c.Bool("skip-polling"),
+			c.Int64("polling-time"))
 	}
 
 	app.Commands = []cli.Command{

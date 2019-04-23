@@ -10,7 +10,7 @@ import (
 	"github.com/recruit-mp/kangol/task"
 )
 
-func deploy(conf, tag string, debug bool, skipPolling bool) {
+func deploy(conf, tag string, debug bool, skipPolling bool, pollingTime int64) {
 
 	deployment, taskDefinition, err := task.ReadConfig(conf, appendTags(tag))
 
@@ -36,7 +36,7 @@ func deploy(conf, tag string, debug bool, skipPolling bool) {
 		if stopTaskError != nil {
 			log.Fatal("Stop All Tasks Error -> ", stopTaskError.Error())
 		}
-		_, err := awsecs.PollingDeployment(service, cluster)
+		_, err := awsecs.PollingDeployment(service, cluster, pollingTime)
 		if err != nil {
 			log.Fatal("Stop All Tasks Error -> ", err.Error())
 		}
@@ -63,7 +63,7 @@ func deploy(conf, tag string, debug bool, skipPolling bool) {
 	if skipPolling {
 		log.Info("Skip Polling Deploy SUCCESS -> ", service)
 	} else {
-		_, deployError := awsecs.PollingDeployment(service, cluster)
+		_, deployError := awsecs.PollingDeployment(service, cluster, pollingTime)
 		if deployError != nil {
 			rollback := awsecs.UpdateService(service, cluster, oldRevision, count)
 			if rollback != nil {
