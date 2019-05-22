@@ -63,13 +63,6 @@ func TestReadConfig(t *testing.T) {
 						Protocol:      aws.String("tcp"),
 					},
 				},
-				HealthCheck: &ecs.HealthCheck{
-					Command:     aws.StringSlice([]string{"bash", "-c", "test.sh"}),
-					Interval:    aws.Int64(5),
-					Retries:     aws.Int64(5),
-					StartPeriod: aws.Int64(10),
-					Timeout:     aws.Int64(10),
-				},
 				Command:     []*string{},
 				EntryPoint:  []*string{},
 				Environment: envs,

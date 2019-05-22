@@ -125,7 +125,6 @@ func ReadConfig(conf string, tags map[string]string) (ClusterService, *ecs.Regis
 			Memory:       aws.Int64(con.Memory),
 			Name:         aws.String(name),
 			PortMappings: getPortMapping(con),
-			HealthCheck:  getHealthCheck(con),
 			Command:      getCommands(con),
 			EntryPoint:   getEntryPoints(con),
 			Environment:  getEnvironments(con),
@@ -133,6 +132,10 @@ func ReadConfig(conf string, tags map[string]string) (ClusterService, *ecs.Regis
 			MountPoints:  getMountPoints(con),
 			VolumesFrom:  getVolumesFrom(con),
 			DockerLabels: con.DockerLabels,
+		}
+
+		if len(con.HealthCheck.Command) != 0 {
+			def.HealthCheck = getHealthCheck(con)
 		}
 
 		if con.LogConfiguration.LogDriver != "" {
