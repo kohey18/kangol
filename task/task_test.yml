@@ -12,6 +12,12 @@ task:
     - containerPort: 9000
       hostPort: 0
       protocol: tcp
+    healthCheck:
+      command: ["bash", "-c", "test.sh"]
+      interval: 5
+      retries: 5
+      startPeriod: 10
+      timeout: 10
     essential: true
     volumesFrom:
     - sourceContainer: test

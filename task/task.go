@@ -33,6 +33,7 @@ type ContainerDefinition struct {
 	Image            string             `yaml:"image"`
 	Memory           int64              `yaml:"memory"`
 	PortMappings     []PortMapping      `yaml:"portMappings"`
+	HealthCheck      HealthCheck        `yaml:"healthCheck"`
 	Command          []string           `yaml:"command"`
 	EntryPoint       []string           `yaml:"entrypoint"`
 	Environment      []Environment      `yaml:"environment"`
@@ -49,6 +50,15 @@ type PortMapping struct {
 	ContainerPort int64  `yaml:"containerPort"`
 	HostPort      int64  `yaml:"hostPort"`
 	Protocol      string `yaml:"protocol"`
+}
+
+// HealthCheck is struct for ECS TaskDefinition's PortMapping
+type HealthCheck struct {
+	Command     []string `yaml:"command"`
+	Interval    int64    `yaml:"interval"`
+	Retries     int64    `yaml:"retries"`
+	StartPeriod int64    `yaml:"startPeriod"`
+	Timeout     int64    `yaml:"timeout"`
 }
 
 // Environment is struct for TaskDefinition's Environment
@@ -115,6 +125,7 @@ func ReadConfig(conf string, tags map[string]string) (ClusterService, *ecs.Regis
 			Memory:       aws.Int64(con.Memory),
 			Name:         aws.String(name),
 			PortMappings: getPortMapping(con),
+			HealthCheck:  getHealthCheck(con),
 			Command:      getCommands(con),
 			EntryPoint:   getEntryPoints(con),
 			Environment:  getEnvironments(con),
@@ -162,6 +173,17 @@ func getPortMapping(con ContainerDefinition) []*ecs.PortMapping {
 		ports = append(ports, port)
 	}
 	return ports
+}
+
+func getHealthCheck(con ContainerDefinition) *ecs.HealthCheck {
+	healthCheck := &ecs.HealthCheck{
+		Command:     aws.StringSlice(con.HealthCheck.Command),
+		Interval:    aws.Int64(con.HealthCheck.Interval),
+		Retries:     aws.Int64(con.HealthCheck.Retries),
+		StartPeriod: aws.Int64(con.HealthCheck.StartPeriod),
+		Timeout:     aws.Int64(con.HealthCheck.Timeout),
+	}
+	return healthCheck
 }
 
 func getCommands(con ContainerDefinition) []*string {
