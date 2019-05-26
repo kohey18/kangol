@@ -12,7 +12,7 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = "kangol"
-	app.Version = "0.2.4"
+	app.Version = "0.2.5"
 	app.Usage = "ECS deployment tool"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
