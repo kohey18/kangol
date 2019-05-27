@@ -152,3 +152,13 @@ task:
         protocol: "tcp"
     essential: true
 ```
+
+## Usage
+- Build
+    - make build
+- Test
+    - make test
+- Update dependency 
+    - make update
+- Update dependency and test
+    - make update_test
