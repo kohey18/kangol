@@ -2,6 +2,7 @@ package awsecs
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -125,7 +126,7 @@ func DescribeDeployedService(service, cluster string) (Deployments, error) {
 
 // PollingDeployment can check deployment message at update-service
 func PollingDeployment(service, cluster string, pollingTime int64) (string, error) {
-	log.Info("Start waiting, polling count -> ", pollingCount)
+	log.Info(fmt.Sprintf("Wait %d seconds", pollingTime))
 	time.Sleep(time.Duration(pollingTime) * time.Second)
 	deployment, err := DescribeDeployedService(service, cluster)
 	if err != nil {
