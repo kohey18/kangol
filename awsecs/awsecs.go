@@ -19,7 +19,7 @@ var svc = awsECSConfig()
 var deploymentMessage = ""
 var pollingCount = 0
 
-// Deployments has deployment infomation at ECS
+// Deployments has deployment information at ECS
 type Deployments struct {
 	active  int64
 	primary int64
@@ -143,7 +143,7 @@ func PollingDeployment(service, cluster string, pollingTime int64) (string, erro
 		deploymentMessage = deployment.message
 	} else if deploymentMessage != deployment.message {
 		pollingCount = 0
-		_, err := checkResouce(deployment.message)
+		_, err := checkResource(deployment.message)
 		if err != nil {
 			return deployment.message, err
 		}
@@ -223,7 +223,7 @@ func RunOneShotTask(cluster string, taskDefinition string, command []*string, cp
 	return *taskArn, err
 }
 
-func checkResouce(message string) (string, error) {
+func checkResource(message string) (string, error) {
 	// TODO: コンテナ配置時におけるメッセージにてエラーを検出
 	if strings.Contains(message, "resources could not be found") {
 		return message, errors.New("resources could not be found")
