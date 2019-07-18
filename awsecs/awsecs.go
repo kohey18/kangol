@@ -10,6 +10,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecs"
 )
@@ -18,7 +19,7 @@ var svc = awsECSConfig()
 var deploymentMessage = ""
 var pollingCount = 0
 
-// Deployments has deployment infomation at ECS
+// Deployments has deployment information at ECS
 type Deployments struct {
 	active  int64
 	primary int64
@@ -132,6 +133,7 @@ func PollingDeployment(service, cluster string, pollingTime int64) (string, erro
 	if err != nil {
 		return deployment.message, err
 	}
+	log.Info(deployment.message)
 
 	// TODO: タスクが連続で変わり続ける場合はdeploy失敗
 	// (ex) service nginx has started 1 tasks: task 474be549-f9e0-4aee-bf1b-6fbac8e3b445.
@@ -141,8 +143,7 @@ func PollingDeployment(service, cluster string, pollingTime int64) (string, erro
 		deploymentMessage = deployment.message
 	} else if deploymentMessage != deployment.message {
 		pollingCount = 0
-		log.Info(deployment.message)
-		_, err := checkResouce(deployment.message)
+		_, err := checkResource(deployment.message)
 		if err != nil {
 			return deployment.message, err
 		}
@@ -185,7 +186,7 @@ func RunOneShotTask(cluster string, taskDefinition string, command []*string, cp
 	}
 	log.Info("RunTask result -> ", *res)
 	if len(res.Tasks) == 0 {
-		return "", errors.New("Failure RunTask result count is zero")
+		return "", errors.New("failure RunTask result count is zero")
 	}
 	taskArn := res.Tasks[0].TaskArn
 	tasksInput := &ecs.DescribeTasksInput{
@@ -195,25 +196,34 @@ func RunOneShotTask(cluster string, taskDefinition string, command []*string, cp
 		},
 	}
 	log.Info("Task Created -> ", *taskArn)
-	waitTaskStoppedError := svc.WaitUntilTasksStopped(tasksInput)
+	// デフォルトは6s * 100回で合計600s待つようになっている
+	// 並列で実行することを考慮して間隔を10sにした
+	maxAttempts := request.WithWaiterMaxAttempts(200)
+	waiterDelay := request.WithWaiterDelay(request.ConstantWaiterDelay(10 * time.Second))
+	waitTaskStoppedError := svc.WaitUntilTasksStoppedWithContext(
+		aws.BackgroundContext(),
+		tasksInput,
+		maxAttempts,
+		waiterDelay,
+	)
 	if waitTaskStoppedError != nil {
-		return "", waitTaskStoppedError
+		return *taskArn, waitTaskStoppedError
 	}
 	log.Info("Task RUNNING and STOPPED -> ", *taskArn)
 
 	result, runTaskError := svc.DescribeTasks(tasksInput)
 	if runTaskError != nil {
-		return "", runTaskError
+		return *taskArn, runTaskError
 	}
 	log.Info("Describe Task result -> ", *result)
 	if *result.Tasks[0].Containers[0].ExitCode != 0 {
-		return *taskArn, errors.New("Task Exited Abnormally")
+		return *taskArn, errors.New("task exited abnormally")
 	}
 
 	return *taskArn, err
 }
 
-func checkResouce(message string) (string, error) {
+func checkResource(message string) (string, error) {
 	// TODO: コンテナ配置時におけるメッセージにてエラーを検出
 	if strings.Contains(message, "resources could not be found") {
 		return message, errors.New("resources could not be found")

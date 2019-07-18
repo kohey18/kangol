@@ -49,12 +49,14 @@ func runTask(conf, tag string, command string, cpu int64, memory int64) {
 
 	taskArn, runTaskError := awsecs.RunOneShotTask(cluster, revision, commands, cpu, memory)
 	if taskArn != "" {
-		log.Info("Show Cloudwatch Logs")
+		log.Info("Show CloudWatch Logs")
 		for _, v := range taskDefinition.ContainerDefinitions {
 			logGroup := v.LogConfiguration.Options["awslogs-group"]
 			logPrefix := v.LogConfiguration.Options["awslogs-stream-prefix"]
 			taskID := strings.Split(taskArn, "/")[1]
 			logStream := fmt.Sprintf("%s/%s/%s", *logPrefix, service, taskID)
+			log.Info("logGroup ... ", *logGroup)
+			log.Info("logStream ... ", logStream)
 			events, err := awscloudwatchlogs.GetLogEvents(*logGroup, logStream)
 			if err != nil {
 				log.Warn("Failed Get Log Events -> ", err.Error())
